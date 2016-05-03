@@ -9,4 +9,4 @@ fi
 
 while read plugin; do
     wp plugin install $plugin --activate
-done < INPUT_FILE
+done < $INPUT_FILE
