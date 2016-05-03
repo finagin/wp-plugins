@@ -1,6 +1,6 @@
 # WordPress plugins
 
-### Freeza WordPress plugins
+### Freeze WordPress plugins
 ```bash
 curl https://finagin.github.io/wp-plugins/freeze | sh [-s output_file_name]
 ```
