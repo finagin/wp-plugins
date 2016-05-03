@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ];
+then
+    OUTPUT_FILE='plugins'
+else
+    OUTPUT_FILE=$1
+fi
+
+wp plugin list | grep -E -o '[a-zA-Z-]+\s+(?:in)?active' | grep -E -o '^[a-zA-Z-]+' > $OUTPUT_FILE

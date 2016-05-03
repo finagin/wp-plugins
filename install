@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ];
+then
+    INPUT_FILE='plugins'
+else
+    INPUT_FILE=$1
+fi
+
+while read plugin; do
+    wp plugin install $plugin --activate
+done < INPUT_FILE
