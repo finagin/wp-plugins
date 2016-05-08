@@ -1,10 +1,68 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-if [ -z "$1" ];
-then
-    OUTPUT_FILE='plugins'
-else
-    OUTPUT_FILE=$1
-fi
+PACKAGE='wp-plugins'
+COMMAND='freeze'
+DOMAIN="finagin.github.io"
+VERSION='0.1.0'
+OUTPUT_FILE='plugins'
+HARD_VERSIONS=false
+NOT_ACTIVATE=false
 
-wp plugin list | grep -E -o '[a-zA-Z-]+\s+(?:in)?active' | grep -E -o '^[a-zA-Z-]+' > $OUTPUT_FILE
+while test $# -gt 0; do
+    case "$1" in
+        -h|--help)
+            echo "$PACKAGE - WordPress plugins helper"
+            echo " "
+            echo "$PACKAGE [options]"
+            echo " "
+            echo "options:"
+            echo "    -H,           --hard-versions         dumps hard versions"
+            echo "    -h,           --help                  show brief help"
+            echo "    -n,           --not-activate          dumps activate status"
+            echo "    -o FILE_NAME, --output=FILE_NAME      specify a file to store output"
+            echo "    -v,           --version               show version"
+            exit 0
+            ;;
+
+        -v|--version)
+            echo "${VERSION}"
+            exit 0
+            ;;
+
+        -o)
+            shift
+            if test $# -gt 0; then
+                OUTPUT_FILE=$1
+            else
+                echo "no output file specified"
+                exit 1
+            fi
+            shift
+            ;;
+        --output*)
+            OUTPUT_FILE=`echo $1 | sed -e 's/^[^=]*=//g'`
+            if [[ ${OUTPUT_FILE} = '--output' || ${OUTPUT_FILE} = '' ]]; then
+                echo "no output file specified"
+                exit 1
+            fi
+            shift
+            ;;
+
+        -H|--hard-versions)
+            HARD_VERSIONS=true
+            shift
+            ;;
+
+        -n|--not-activate)
+            NOT_ACTIVATE=true
+            shift
+            ;;
+
+        *)
+            break
+            ;;
+    esac
+done
+
+curl -sSL "https://${DOMAIN}/${PACKAGE}/v${VERSION}/${COMMAND}" | sh -s ${OUTPUT_FILE} ${HARD_VERSIONS} ${NOT_ACTIVATE}
+

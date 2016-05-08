@@ -1,0 +1,42 @@
+#!/bin/bash
+
+INPUT_FILE=$1
+HARD_VERSIONS=$2
+SOFT_VERSIONS=$3
+ACTIVATE=$4
+
+if [[ ${HARD_VERSIONS} = 'true' ]]; then
+    RE_VERSIONS_F='s/\^=\(.*\)/--version=\1 --force/g'
+    RE_VERSIONS_S='s/\ =\(.*\)/--version=\1 --force/g'
+elif [[ ${SOFT_VERSIONS} = 'true' ]]; then
+    RE_VERSIONS_F='s/\^=.*//g'
+    RE_VERSIONS_S='s/\ =.*//g'
+else
+    RE_VERSIONS_F='s/\^=\(.*\)/--version=\1 --force/g'
+    RE_VERSIONS_S='s/\ =.*//g'
+fi;
+
+if [[ ${ACTIVATE} = 'true' ]]; then
+    RE_ACTIVATE_F='s/\[ \]/--activate/g'
+    RE_ACTIVATE_S='s/\[\*\]/--activate/g'
+elif [[ ${ACTIVATE} = 'false' ]]; then
+    RE_ACTIVATE_F='s/\[ \]//g'
+    RE_ACTIVATE_S='s/\[\*\]//g'
+else
+    RE_ACTIVATE_F='s/\[ \]//g'
+    RE_ACTIVATE_S='s/\[\*\]/--activate/g'
+fi;
+
+while read plugin; do
+
+    echo ${plugin} \
+        | perl -pXe 's/(\[[\*\s]\])([^\^=]+)(\^?=.*)/wp plugin install \2 \1 \3/g' \
+        | sed "${RE_ACTIVATE_F}" \
+        | sed "${RE_ACTIVATE_S}" \
+        | sed "${RE_VERSIONS_F}" \
+        | sed "${RE_VERSIONS_S}" \
+        | grep -E '^wp' \
+        | sh
+
+done < ${INPUT_FILE}
+

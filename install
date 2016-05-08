@@ -1,12 +1,81 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-if [ -z "$1" ];
-then
-    INPUT_FILE='plugins'
-else
-    INPUT_FILE=$1
-fi
+PACKAGE='wp-plugins'
+COMMAND='install'
+DOMAIN="finagin.github.io"
+VERSION='0.1.0'
+INPUT_FILE='plugins'
+HARD_VERSIONS=false
+SOFT_VERSIONS=false
+ACTIVATE='soft'
 
-while read plugin; do
-    wp plugin install $plugin --activate
-done < $INPUT_FILE
+while test $# -gt 0; do
+    case "$1" in
+        -h|--help)
+            echo "$PACKAGE - WordPress plugins helper"
+            echo " "
+            echo "$PACKAGE [options]"
+            echo " "
+            echo "options:"
+            echo "    -a,           --activate              force activate plugins"
+            echo "    -H,           --hard-versions         force install dumps version"
+            echo "    -h,           --help                  show brief help"
+            echo "    -i FILE_NAME, --input=FILE_NAME       specify a file to get input"
+            echo "    -s,           --soft-versions)        force install last version"
+            echo "    -v,           --version               show last version"
+            exit 0
+            ;;
+
+        -v|--version)
+            echo "${VERSION}"
+            exit 0
+            ;;
+
+        -i)
+            shift
+            if test $# -gt 0; then
+                INPUT_FILE=$1
+            else
+                echo "no input file specified"
+                exit 1
+            fi
+            shift
+            ;;
+        --input*)
+            INPUT_FILE=`echo $1 | sed -e 's/^[^=]*=//g'`
+            if [[ ${INPUT_FILE} = '--input' || ${INPUT_FILE} = '' ]]; then
+                echo "no input file specified"
+                exit 1
+            fi
+            shift
+            ;;
+
+        -s|--soft-versions)
+            SOFT_VERSIONS=true
+            shift
+            ;;
+
+        -H|--hard-versions)
+            HARD_VERSIONS=true
+            shift
+            ;;
+
+        -a|--activate)
+            ACTIVATE=true
+            shift
+            ;;
+
+        *)
+            break
+            ;;
+    esac
+done
+
+if [[ ${SOFT_VERSIONS} = 'true' ]] && [[ ${HARD_VERSIONS} = 'true' ]]; then
+    echo "U can't use -s(--soft-versions) and -H(--hard-versions) simultaneously"
+    exit 1;
+fi;
+
+VERSION=$(head -n 1 ${INPUT_FILE}) | sed 's/^{v\(.*\)}$/\1/g'
+
+curl -sSL "https://${DOMAIN}/${PACKAGE}/v${VERSION}/${COMMAND}" | sh -s ${INPUT_FILE} ${HARD_VERSIONS} ${SOFT_VERSIONS} ${ACTIVATE}

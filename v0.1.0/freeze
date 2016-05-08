@@ -1,0 +1,30 @@
+#!/bin/bash
+
+VERISON=0.1.0
+OUTPUT_FILE=$1
+HARD_VERSIONS=$2
+NOT_ACTIVATE=$3
+
+echo "{v${VERISON}}" > $OUTPUT_FILE
+
+if [[ $HARD_VERSIONS = 'true' ]]; then
+    RE_HV='s/=/^=/g'
+else
+    RE_HV='s/=/=/g'
+fi;
+
+if [[ $NOT_ACTIVATE = 'true' ]]; then
+    RE_NA='s/\[active\]/[ ]/g'
+else
+    RE_NA='s/\[active\]/[*]/g'
+fi;
+
+wp plugin list \
+    | perl -pXe 's/([a-z-]+)\s+((?:in)?active)\s+(none|available)\s+([^\s]+)/[\2]\1=\4/g' \
+    | sed 's/\[inactive\]/[ ]/g' \
+    | sed "${RE_NA}" \
+    | sed "${RE_HV}" \
+    | grep -E '^\[' \
+    \
+     >> $OUTPUT_FILE
+
